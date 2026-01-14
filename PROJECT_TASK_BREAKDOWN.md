@@ -158,7 +158,6 @@
   - Admin web Dockerfile
 - [x] **Subtask 1.1.3.3**: Environment configuration
   - `.env.example` templates
-  - Actual `.env` files created with development-safe values
   - Environment validation
   - Secrets management strategy
 - [x] **Subtask 1.1.3.4**: Staging environment setup
@@ -172,7 +171,7 @@
 #### Task 1.1.4: CI/CD Pipeline Setup
 - [x] **Subtask 1.1.4.1**: Choose CI/CD platform
   - GitHub Actions / GitLab CI / Jenkins
-  - Decision and setup (GitHub Actions selected)
+  - Decision and setup (GitHub Actions selected and configured)
 - [x] **Subtask 1.1.4.2**: Automated testing pipeline
   - Unit test execution
   - Linting and formatting checks
@@ -418,24 +417,71 @@
   - CRUD operations
   - Job validation
   - Publishing workflow
+  - Status management (Pending, Published, Rejected, Closed/Expired)
+  - Status transition validation
+  - Real-time status updates
 - [ ] **Subtask 2.3.2.2**: Job controller
   - GET `/api/v1/jobs`
   - GET `/api/v1/jobs/:id`
   - POST `/api/v1/jobs`
   - PATCH `/api/v1/jobs/:id`
   - POST `/api/v1/jobs/:id/publish`
+  - POST `/api/v1/jobs/:id/reject` (with reason)
+  - POST `/api/v1/jobs/:id/close` (close/expire)
+  - POST `/api/v1/jobs/:id/reopen` (reopen closed job)
   - POST `/api/v1/jobs/:id/archive`
 - [ ] **Subtask 2.3.2.3**: Job DTOs
   - CreateJobDto
   - UpdateJobDto
   - FilterJobDto
-- [ ] **Subtask 2.3.2.4**: Unit tests
+  - JobStatusDto (with transition rules)
+  - RejectJobDto (with reason field)
+- [ ] **Subtask 2.3.2.4**: Job status workflow
+  - Status transition rules validation
+  - Status history tracking
+  - Status change notifications
+  - Audit logging for status changes
+- [ ] **Subtask 2.3.2.5**: Unit tests
   - Service tests
   - Controller tests
+  - Status transition tests
   - Integration tests
 
 **Dependencies**: 2.2.1, 2.2.2  
 **Parallel with**: 2.3.1, 2.3.3
+
+#### Task 2.3.2.6: Application Management (Job Applicants)
+- [ ] **Subtask 2.3.2.6.1**: Application service
+  - Track job applications
+  - Application status management (New, Shortlisted, Hired, Rejected)
+  - Application history tracking
+  - Match score calculation per application
+- [ ] **Subtask 2.3.2.6.2**: Application controller
+  - GET `/api/v1/jobs/:id/applicants` - View all applicants for a job
+  - GET `/api/v1/jobs/:id/applicants/:applicantId` - View application details
+  - POST `/api/v1/jobs/:id/applicants/:applicantId/shortlist` - Shortlist candidate
+  - POST `/api/v1/jobs/:id/applicants/:applicantId/hire` - Hire candidate
+  - POST `/api/v1/jobs/:id/applicants/:applicantId/reject` - Reject candidate
+  - GET `/api/v1/applications` - List all applications (admin)
+- [ ] **Subtask 2.3.2.6.3**: Application DTOs
+  - ApplicationDto (with match score breakdown)
+  - ShortlistApplicationDto (with notes)
+  - HireApplicationDto (with hire date and notes)
+  - RejectApplicationDto (with rejection reason)
+  - ApplicationFilterDto (filter by status, job, talent)
+- [ ] **Subtask 2.3.2.6.4**: Application notifications
+  - Notify talent on shortlist
+  - Notify talent on hire
+  - Notify talent on rejection
+  - Notify employer on new application
+- [ ] **Subtask 2.3.2.6.5**: Application analytics
+  - Application statistics per job
+  - Conversion rates (application → shortlist → hire)
+  - Time-to-hire metrics
+  - Source tracking
+
+**Dependencies**: 2.3.2.1, 2.3.2.2, 2.3.3.1 (for match scores)  
+**Parallel with**: 2.3.3
 
 #### Task 2.3.3: Matching Module
 - [ ] **Subtask 2.3.3.1**: Matching service
