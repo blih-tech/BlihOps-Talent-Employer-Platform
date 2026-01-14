@@ -4,15 +4,15 @@
   "private": true,
   "description": "BlihOps Talent & Employer Platform - Monorepo",
   "scripts": {
-    "build": "pnpm -r --filter './packages/*' build",
-    "dev": "pnpm -r --filter './packages/*' dev",
-    "lint": "pnpm -r --filter './packages/*' lint",
-    "lint:fix": "pnpm -r --filter './packages/*' lint:fix",
+    "build": "pnpm -r --filter './packages/*' --if-present build",
+    "dev": "pnpm -r --filter './packages/*' --if-present dev",
+    "lint": "pnpm -r --filter './packages/*' --if-present lint",
+    "lint:fix": "pnpm -r --filter './packages/*' --if-present lint:fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "type-check": "pnpm -r --filter './packages/*' type-check",
-    "test": "pnpm -r --filter './packages/*' test",
-    "clean": "pnpm -r --filter './packages/*' clean && rm -rf node_modules",
+    "type-check": "pnpm -r --filter './packages/*' --if-present type-check",
+    "test": "pnpm -r --filter './packages/*' --if-present test",
+    "clean": "pnpm -r --filter './packages/*' --if-present clean && rm -rf node_modules",
     "prepare": "husky install"
   },
   "devDependencies": {
