@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { TalentModule } from './modules/talent/talent.module';
+import { JobsModule } from './modules/jobs/jobs.module';
 
 @Module({
   imports: [
@@ -13,8 +14,8 @@ import { TalentModule } from './modules/talent/talent.module';
     }),
     AuthModule,
     TalentModule,
+    JobsModule,
     // TODO: Add other modules here
-    // JobsModule,
     // MatchingModule,
     // AdminModule,
     // TelegramModule,

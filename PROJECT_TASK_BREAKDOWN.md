@@ -98,7 +98,7 @@
   - Basic matching logic
   - Performance testing
   - Cache hit/miss scenarios
-- [ ] **Subtask 1.0.4.3**: Document algorithm
+- [x] **Subtask 1.0.4.3**: Document algorithm
   - Algorithm specification
   - Performance benchmarks
   - Scalability considerations
@@ -158,6 +158,7 @@
   - Admin web Dockerfile
 - [x] **Subtask 1.1.3.3**: Environment configuration
   - `.env.example` templates
+  - Actual `.env` files created with development-safe values
   - Environment validation
   - Secrets management strategy
 - [x] **Subtask 1.1.3.4**: Staging environment setup
@@ -169,21 +170,21 @@
 **Parallel with**: 1.1.1, 1.1.2
 
 #### Task 1.1.4: CI/CD Pipeline Setup
-- [ ] **Subtask 1.1.4.1**: Choose CI/CD platform
+- [x] **Subtask 1.1.4.1**: Choose CI/CD platform
   - GitHub Actions / GitLab CI / Jenkins
-  - Decision and setup
-- [ ] **Subtask 1.1.4.2**: Automated testing pipeline
+  - Decision and setup (GitHub Actions selected)
+- [x] **Subtask 1.1.4.2**: Automated testing pipeline
   - Unit test execution
   - Linting and formatting checks
   - Type checking
-- [ ] **Subtask 1.1.4.3**: Build pipeline
+- [x] **Subtask 1.1.4.3**: Build pipeline
   - Package builds
-  - Docker image builds
-  - Artifact storage
-- [ ] **Subtask 1.1.4.4**: Deployment pipeline
+  - Docker image builds (placeholder for future)
+  - Artifact storage (placeholder for future)
+- [x] **Subtask 1.1.4.4**: Deployment pipeline
   - Staging auto-deploy
   - Production manual approval
-  - Rollback strategy
+  - Rollback strategy (placeholder for future)
 
 **Dependencies**: 1.1.1  
 **Parallel with**: 1.1.2, 1.1.3
