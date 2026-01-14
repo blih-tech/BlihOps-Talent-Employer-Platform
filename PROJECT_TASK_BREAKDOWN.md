@@ -157,9 +157,10 @@
   - Telegram bot Dockerfile
   - Admin web Dockerfile
 - [x] **Subtask 1.1.3.3**: Environment configuration
-  - `.env.example` templates
-  - Environment validation
-  - Secrets management strategy
+  - `.env.example` templates (in `docs/ENV_TEMPLATE.md`)
+  - Actual `.env` files created for all packages (root, api-backend, telegram-bot, admin-web)
+  - Environment validation (`scripts/validate-env.js`)
+  - Secrets management strategy (`.env` files in `.gitignore`)
 - [x] **Subtask 1.1.3.4**: Staging environment setup
   - Staging Docker Compose
   - Staging database
