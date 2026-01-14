@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: blihops-postgres-staging
+    restart: unless-stopped
+    ports:
+      - '5433:5432'
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER_STAGING:-blihops_staging}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_STAGING:-staging_password}
+      POSTGRES_DB: ${POSTGRES_DB_STAGING:-blihops_staging_db}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_staging_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER_STAGING:-blihops_staging}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blihops-staging-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: blihops-redis-staging
+    restart: unless-stopped
+    ports:
+      - '6380:6379'
+    command: redis-server --appendonly yes --maxmemory 2gb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_staging_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blihops-staging-network
+
+volumes:
+  postgres_staging_data:
+    driver: local
+  redis_staging_data:
+    driver: local
+  app_storage_staging:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${APP_STORAGE_PATH_STAGING:-./storage-staging}
+
+networks:
+  blihops-staging-network:
+    driver: bridge
+
+

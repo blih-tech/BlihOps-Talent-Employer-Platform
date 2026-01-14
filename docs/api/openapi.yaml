@@ -1,0 +1,1631 @@
+openapi: 3.1.0
+info:
+  title: BlihOps Talent & Employer Platform API
+  description: |
+    REST API for the BlihOps Talent & Employer Platform.
+    
+    This API provides endpoints for:
+    - Talent profile management
+    - Job posting and management
+    - Talent-job matching
+    - Administrative operations
+    - File uploads (CVs)
+    - Telegram webhook integration
+    
+    **Authentication**: All endpoints except `/auth/login` require JWT Bearer token authentication.
+    
+    **Base URL**: `https://api.blihops.com/api/v1`
+    
+    **Version**: 1.0.0
+  version: 1.0.0
+  contact:
+    name: BlihOps API Support
+    email: api-support@blihops.com
+  license:
+    name: Proprietary
+    url: https://blihops.com/license
+
+servers:
+  - url: https://api.blihops.com/api/v1
+    description: Production server
+  - url: https://staging-api.blihops.com/api/v1
+    description: Staging server
+  - url: http://localhost:3000/api/v1
+    description: Local development server
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization
+  - name: Talents
+    description: Talent profile management
+  - name: Jobs
+    description: Job posting and management
+  - name: Matching
+    description: Talent-job matching algorithms
+  - name: Admin
+    description: Administrative operations and analytics
+  - name: Files
+    description: File upload and management (CVs)
+  - name: Telegram
+    description: Telegram webhook integration
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Admin login
+      description: Authenticate admin user and receive JWT tokens
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: admin@blihops.com
+              password: securePassword123
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              example:
+                accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                refreshToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                expiresIn: 3600
+                user:
+                  id: 123e4567-e89b-12d3-a456-426614174000
+                  email: admin@blihops.com
+                  role: admin
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: Get a new access token using refresh token
+      operationId: refreshToken
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout
+      description: Invalidate refresh token
+      operationId: logout
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Logged out successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /talents:
+    get:
+      tags:
+        - Talents
+      summary: List talents
+      description: Get paginated list of talents with filtering and sorting
+      operationId: listTalents
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: status
+          in: query
+          description: Filter by approval status
+          schema:
+            type: string
+            enum: [pending, approved, rejected]
+        - name: category
+          in: query
+          description: Filter by service category
+          schema:
+            $ref: '#/components/schemas/ServiceCategory'
+        - name: skills
+          in: query
+          description: Filter by skills (comma-separated)
+          schema:
+            type: string
+            example: TypeScript,NestJS,PostgreSQL
+        - name: search
+          in: query
+          description: Search in name and skills
+          schema:
+            type: string
+        - name: sortBy
+          in: query
+          description: Sort field
+          schema:
+            type: string
+            enum: [createdAt, name, experienceLevel]
+            default: createdAt
+        - name: sortOrder
+          in: query
+          description: Sort order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: List of talents
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TalentListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+    post:
+      tags:
+        - Talents
+      summary: Create talent profile
+      description: Create a new talent profile (typically called from Telegram bot)
+      operationId: createTalent
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTalentRequest'
+      responses:
+        '201':
+          description: Talent created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Talent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Talent with this Telegram ID already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /talents/{id}:
+    get:
+      tags:
+        - Talents
+      summary: Get talent by ID
+      description: Get detailed talent profile
+      operationId: getTalent
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TalentIdParam'
+      responses:
+        '200':
+          description: Talent details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Talent'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - Talents
+      summary: Update talent profile
+      description: Update talent profile (partial update)
+      operationId: updateTalent
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TalentIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTalentRequest'
+      responses:
+        '200':
+          description: Talent updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Talent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Talents
+      summary: Delete talent profile
+      description: Soft delete talent profile
+      operationId: deleteTalent
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TalentIdParam'
+      responses:
+        '204':
+          description: Talent deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /talents/{id}/approve:
+    post:
+      tags:
+        - Talents
+      summary: Approve talent profile
+      description: Approve talent profile for public visibility
+      operationId: approveTalent
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TalentIdParam'
+      responses:
+        '200':
+          description: Talent approved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Talent'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Talent already approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /talents/{id}/reject:
+    post:
+      tags:
+        - Talents
+      summary: Reject talent profile
+      description: Reject talent profile with optional reason
+      operationId: rejectTalent
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TalentIdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  description: Rejection reason
+                  example: Profile incomplete
+      responses:
+        '200':
+          description: Talent rejected successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Talent'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /talents/{id}/cv:
+    get:
+      tags:
+        - Talents
+      summary: Download talent CV
+      description: Get talent CV file
+      operationId: getTalentCV
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TalentIdParam'
+      responses:
+        '200':
+          description: CV file
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            application/msword:
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /jobs:
+    get:
+      tags:
+        - Jobs
+      summary: List jobs
+      description: Get paginated list of jobs with filtering
+      operationId: listJobs
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: status
+          in: query
+          description: Filter by job status
+          schema:
+            type: string
+            enum: [draft, pending, published, archived]
+        - name: category
+          in: query
+          description: Filter by service category
+          schema:
+            $ref: '#/components/schemas/ServiceCategory'
+        - name: createdBy
+          in: query
+          description: Filter by creator admin ID
+          schema:
+            type: string
+            format: uuid
+        - name: search
+          in: query
+          description: Search in title and description
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of jobs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Jobs
+      summary: Create job posting
+      description: Create a new job posting (typically called from Telegram bot or admin dashboard)
+      operationId: createJob
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateJobRequest'
+      responses:
+        '201':
+          description: Job created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /jobs/{id}:
+    get:
+      tags:
+        - Jobs
+      summary: Get job by ID
+      description: Get detailed job posting
+      operationId: getJob
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/JobIdParam'
+      responses:
+        '200':
+          description: Job details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - Jobs
+      summary: Update job posting
+      description: Update job posting (partial update)
+      operationId: updateJob
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/JobIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateJobRequest'
+      responses:
+        '200':
+          description: Job updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Jobs
+      summary: Delete job posting
+      description: Soft delete job posting
+      operationId: deleteJob
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/JobIdParam'
+      responses:
+        '204':
+          description: Job deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /jobs/{id}/publish:
+    post:
+      tags:
+        - Jobs
+      summary: Publish job posting
+      description: Publish job to Telegram channel and make it visible
+      operationId: publishJob
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/JobIdParam'
+      responses:
+        '200':
+          description: Job published successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Job already published
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /jobs/{id}/archive:
+    post:
+      tags:
+        - Jobs
+      summary: Archive job posting
+      description: Archive job posting (no longer accepting applications)
+      operationId: archiveJob
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/JobIdParam'
+      responses:
+        '200':
+          description: Job archived successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /matching/jobs/{jobId}/talents:
+    get:
+      tags:
+        - Matching
+      summary: Get matched talents for a job
+      description: Get ranked list of talents matched to a specific job
+      operationId: getMatchedTalents
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/JobIdParam'
+        - name: limit
+          in: query
+          description: Maximum number of matches to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: minScore
+          in: query
+          description: Minimum match score (0-100)
+          schema:
+            type: number
+            minimum: 0
+            maximum: 100
+            default: 0
+      responses:
+        '200':
+          description: List of matched talents with scores
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job:
+                    $ref: '#/components/schemas/Job'
+                  matches:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        talent:
+                          $ref: '#/components/schemas/Talent'
+                        score:
+                          type: number
+                          description: Match score (0-100)
+                          example: 85.5
+                        breakdown:
+                          $ref: '#/components/schemas/MatchBreakdown'
+                  total:
+                    type: integer
+                    example: 45
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /matching/talents/{talentId}/jobs:
+    get:
+      tags:
+        - Matching
+      summary: Get matched jobs for a talent
+      description: Get ranked list of jobs matched to a specific talent
+      operationId: getMatchedJobs
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TalentIdParam'
+        - name: limit
+          in: query
+          description: Maximum number of matches to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: minScore
+          in: query
+          description: Minimum match score (0-100)
+          schema:
+            type: number
+            minimum: 0
+            maximum: 100
+            default: 0
+      responses:
+        '200':
+          description: List of matched jobs with scores
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  talent:
+                    $ref: '#/components/schemas/Talent'
+                  matches:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        job:
+                          $ref: '#/components/schemas/Job'
+                        score:
+                          type: number
+                          description: Match score (0-100)
+                          example: 82.3
+                        breakdown:
+                          $ref: '#/components/schemas/MatchBreakdown'
+                  total:
+                    type: integer
+                    example: 12
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /admin/stats:
+    get:
+      tags:
+        - Admin
+      summary: Get platform statistics
+      description: Get overall platform statistics and metrics
+      operationId: getAdminStats
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Platform statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminStats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/analytics:
+    get:
+      tags:
+        - Admin
+      summary: Get analytics data
+      description: Get detailed analytics and trends
+      operationId: getAdminAnalytics
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          description: Start date for analytics period
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: End date for analytics period
+          schema:
+            type: string
+            format: date
+        - name: metric
+          in: query
+          description: Specific metric to retrieve
+          schema:
+            type: string
+            enum: [onboarding, matching, engagement, conversion]
+      responses:
+        '200':
+          description: Analytics data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminAnalytics'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/metrics:
+    get:
+      tags:
+        - Admin
+      summary: Get key metrics
+      description: Get key performance metrics
+      operationId: getAdminMetrics
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Key metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminMetrics'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /admin/bulk-approve:
+    post:
+      tags:
+        - Admin
+      summary: Bulk approve talents
+      description: Approve multiple talent profiles at once
+      operationId: bulkApproveTalents
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - talentIds
+              properties:
+                talentIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  minItems: 1
+                  maxItems: 100
+                  example:
+                    - 123e4567-e89b-12d3-a456-426614174000
+                    - 223e4567-e89b-12d3-a456-426614174001
+      responses:
+        '200':
+          description: Bulk approval result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  approved:
+                    type: integer
+                    example: 8
+                  failed:
+                    type: integer
+                    example: 2
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        talentId:
+                          type: string
+                          format: uuid
+                        error:
+                          type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /files/upload:
+    post:
+      tags:
+        - Files
+      summary: Upload file (CV)
+      description: Upload a file (typically CV) and get file reference
+      operationId: uploadFile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: File to upload (PDF, DOC, DOCX - max 10MB)
+                talentId:
+                  type: string
+                  format: uuid
+                  description: Associated talent ID (optional)
+      responses:
+        '201':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  filename:
+                    type: string
+                    example: cv_john_doe.pdf
+                  size:
+                    type: integer
+                    description: File size in bytes
+                    example: 245678
+                  mimeType:
+                    type: string
+                    example: application/pdf
+                  url:
+                    type: string
+                    format: uri
+                    description: URL to download file
+                    example: https://api.blihops.com/api/v1/files/123e4567-e89b-12d3-a456-426614174000
+                  uploadedAt:
+                    type: string
+                    format: date-time
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          description: File too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /telegram/webhook:
+    post:
+      tags:
+        - Telegram
+      summary: Telegram webhook endpoint
+      description: Receive webhook events from Telegram Bot API
+      operationId: telegramWebhook
+      security:
+        - TelegramWebhookSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Telegram Update object
+              x-external-docs:
+                url: https://core.telegram.org/bots/api#update
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+        '401':
+          description: Invalid webhook secret
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /auth/login endpoint
+    TelegramWebhookSecret:
+      type: apiKey
+      in: header
+      name: X-Telegram-Bot-Api-Secret-Token
+      description: Secret token for Telegram webhook verification
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Page number (1-indexed)
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    LimitParam:
+      name: limit
+      in: query
+      description: Number of items per page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    TalentIdParam:
+      name: id
+      in: path
+      required: true
+      description: Talent UUID
+      schema:
+        type: string
+        format: uuid
+    JobIdParam:
+      name: id
+      in: path
+      required: true
+      description: Job UUID
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    # Authentication
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: admin@blihops.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: securePassword123
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        refreshToken:
+          type: string
+          description: JWT refresh token
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        expiresIn:
+          type: integer
+          description: Access token expiration time in seconds
+          example: 3600
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [admin, super_admin]
+        createdAt:
+          type: string
+          format: date-time
+
+    # Talents
+    Talent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        telegramId:
+          type: integer
+          description: Telegram user ID
+          example: 123456789
+        name:
+          type: string
+          example: John Doe
+        serviceCategory:
+          $ref: '#/components/schemas/ServiceCategory'
+        roleSpecialization:
+          type: string
+          example: Senior Full-Stack Developer
+        skills:
+          type: array
+          items:
+            type: string
+          example:
+            - TypeScript
+            - NestJS
+            - PostgreSQL
+            - React
+        experienceLevel:
+          $ref: '#/components/schemas/ExperienceLevel'
+        availability:
+          $ref: '#/components/schemas/Availability'
+        engagementPreference:
+          $ref: '#/components/schemas/EngagementType'
+        cvFileId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Reference to uploaded CV file
+        status:
+          $ref: '#/components/schemas/TalentStatus'
+        consentForPublicVisibility:
+          type: boolean
+          default: true
+        metadata:
+          type: object
+          description: Additional flexible data (JSONB)
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        approvedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    CreateTalentRequest:
+      type: object
+      required:
+        - telegramId
+        - name
+        - serviceCategory
+        - skills
+        - experienceLevel
+        - availability
+        - engagementPreference
+      properties:
+        telegramId:
+          type: integer
+          example: 123456789
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: John Doe
+        serviceCategory:
+          $ref: '#/components/schemas/ServiceCategory'
+        roleSpecialization:
+          type: string
+          maxLength: 200
+          example: Senior Full-Stack Developer
+        skills:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 50
+          example:
+            - TypeScript
+            - NestJS
+            - PostgreSQL
+        experienceLevel:
+          $ref: '#/components/schemas/ExperienceLevel'
+        availability:
+          $ref: '#/components/schemas/Availability'
+        engagementPreference:
+          $ref: '#/components/schemas/EngagementType'
+        cvFileId:
+          type: string
+          format: uuid
+        consentForPublicVisibility:
+          type: boolean
+          default: true
+        metadata:
+          type: object
+          additionalProperties: true
+
+    UpdateTalentRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+        serviceCategory:
+          $ref: '#/components/schemas/ServiceCategory'
+        roleSpecialization:
+          type: string
+          maxLength: 200
+        skills:
+          type: array
+          items:
+            type: string
+          maxItems: 50
+        experienceLevel:
+          $ref: '#/components/schemas/ExperienceLevel'
+        availability:
+          $ref: '#/components/schemas/Availability'
+        engagementPreference:
+          $ref: '#/components/schemas/EngagementType'
+        cvFileId:
+          type: string
+          format: uuid
+        consentForPublicVisibility:
+          type: boolean
+        metadata:
+          type: object
+          additionalProperties: true
+
+    TalentListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Talent'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    # Jobs
+    Job:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdBy:
+          type: string
+          format: uuid
+          description: Admin user ID who created the job
+        title:
+          type: string
+          example: Senior Full-Stack Developer
+        description:
+          type: string
+          example: We are looking for an experienced full-stack developer...
+        serviceCategory:
+          $ref: '#/components/schemas/ServiceCategory'
+        requiredSkills:
+          type: array
+          items:
+            type: string
+          example:
+            - TypeScript
+            - NestJS
+            - PostgreSQL
+            - React
+        preferredExperienceLevel:
+          $ref: '#/components/schemas/ExperienceLevel'
+        engagementType:
+          $ref: '#/components/schemas/EngagementType'
+        duration:
+          type: string
+          nullable: true
+          example: 6 months
+        status:
+          $ref: '#/components/schemas/JobStatus'
+        metadata:
+          type: object
+          description: Additional flexible data (JSONB)
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        publishedAt:
+          type: string
+          format: date-time
+          nullable: true
+        archivedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    CreateJobRequest:
+      type: object
+      required:
+        - title
+        - description
+        - serviceCategory
+        - requiredSkills
+        - engagementType
+      properties:
+        title:
+          type: string
+          minLength: 5
+          maxLength: 200
+          example: Senior Full-Stack Developer
+        description:
+          type: string
+          minLength: 50
+          maxLength: 5000
+          example: We are looking for an experienced full-stack developer...
+        serviceCategory:
+          $ref: '#/components/schemas/ServiceCategory'
+        requiredSkills:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 50
+          example:
+            - TypeScript
+            - NestJS
+            - PostgreSQL
+        preferredExperienceLevel:
+          $ref: '#/components/schemas/ExperienceLevel'
+        engagementType:
+          $ref: '#/components/schemas/EngagementType'
+        duration:
+          type: string
+          maxLength: 100
+          example: 6 months
+        metadata:
+          type: object
+          additionalProperties: true
+
+    UpdateJobRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 5
+          maxLength: 200
+        description:
+          type: string
+          minLength: 50
+          maxLength: 5000
+        serviceCategory:
+          $ref: '#/components/schemas/ServiceCategory'
+        requiredSkills:
+          type: array
+          items:
+            type: string
+          maxItems: 50
+        preferredExperienceLevel:
+          $ref: '#/components/schemas/ExperienceLevel'
+        engagementType:
+          $ref: '#/components/schemas/EngagementType'
+        duration:
+          type: string
+          maxLength: 100
+        metadata:
+          type: object
+          additionalProperties: true
+
+    JobListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Job'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    # Matching
+    MatchBreakdown:
+      type: object
+      description: Detailed breakdown of match score components
+      properties:
+        serviceCategory:
+          type: number
+          description: Service category match score (0-100)
+          example: 100
+        skillOverlap:
+          type: number
+          description: Skill overlap score (0-100)
+          example: 85.5
+        experienceLevel:
+          type: number
+          description: Experience level match score (0-100)
+          example: 90
+        availability:
+          type: number
+          description: Availability match score (0-100)
+          example: 75
+        total:
+          type: number
+          description: Total weighted score (0-100)
+          example: 87.5
+
+    # Admin
+    AdminStats:
+      type: object
+      properties:
+        talents:
+          type: object
+          properties:
+            total:
+              type: integer
+            pending:
+              type: integer
+            approved:
+              type: integer
+            rejected:
+              type: integer
+        jobs:
+          type: object
+          properties:
+            total:
+              type: integer
+            draft:
+              type: integer
+            published:
+              type: integer
+            archived:
+              type: integer
+        matches:
+          type: object
+          properties:
+            totalCalculated:
+              type: integer
+            averageScore:
+              type: number
+        lastUpdated:
+          type: string
+          format: date-time
+
+    AdminAnalytics:
+      type: object
+      properties:
+        period:
+          type: object
+          properties:
+            startDate:
+              type: string
+              format: date
+            endDate:
+              type: string
+              format: date
+        onboarding:
+          type: object
+          properties:
+            totalOnboarded:
+              type: integer
+            completionRate:
+              type: number
+              description: Percentage of started onboarding that completed
+            averageTime:
+              type: number
+              description: Average onboarding time in minutes
+        matching:
+          type: object
+          properties:
+            totalMatches:
+              type: integer
+            averageScore:
+              type: number
+            topMatches:
+              type: integer
+              description: Number of matches with score >80
+        engagement:
+          type: object
+          properties:
+            activeTalents:
+              type: integer
+            activeJobs:
+              type: integer
+            responseRate:
+              type: number
+              description: Percentage of matches that resulted in contact
+        conversion:
+          type: object
+          properties:
+            approvalRate:
+              type: number
+              description: Percentage of talents approved
+            publicationRate:
+              type: number
+              description: Percentage of jobs published
+            matchToHireRate:
+              type: number
+              description: Percentage of matches that resulted in hire
+
+    AdminMetrics:
+      type: object
+      properties:
+        timeToMatch:
+          type: number
+          description: Average time from job creation to first match (hours)
+        timeToApprove:
+          type: number
+          description: Average time from talent submission to approval (hours)
+        matchQuality:
+          type: number
+          description: Average match score across all matches
+        systemHealth:
+          type: object
+          properties:
+            apiResponseTime:
+              type: number
+              description: Average API response time (ms)
+            databaseHealth:
+              type: string
+              enum: [healthy, degraded, down]
+            queueHealth:
+              type: string
+              enum: [healthy, degraded, down]
+
+    # Common
+    ServiceCategory:
+      type: string
+      enum:
+        - ITO
+        - AI_SOLUTIONS
+        - AUTOMATION
+        - DATA_ANALYTICS
+      description: BlihOps service category
+
+    ExperienceLevel:
+      type: string
+      enum:
+        - JUNIOR
+        - MID
+        - SENIOR
+        - LEAD
+        - PRINCIPAL
+      description: Experience level
+
+    Availability:
+      type: string
+      enum:
+        - IMMEDIATE
+        - ONE_WEEK
+        - TWO_WEEKS
+        - ONE_MONTH
+        - CUSTOM
+      description: Availability status
+
+    EngagementType:
+      type: string
+      enum:
+        - FULL_TIME
+        - PART_TIME
+        - CONTRACT
+        - FREELANCE
+        - INTERNSHIP
+      description: Engagement type
+
+    TalentStatus:
+      type: string
+      enum:
+        - pending
+        - approved
+        - rejected
+      description: Talent profile approval status
+
+    JobStatus:
+      type: string
+      enum:
+        - draft
+        - pending
+        - published
+        - archived
+      description: Job posting status
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+        hasNext:
+          type: boolean
+        hasPrev:
+          type: boolean
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: VALIDATION_ERROR
+        message:
+          type: string
+          description: Human-readable error message
+          example: Invalid input data
+        details:
+          type: object
+          description: Additional error details
+          additionalProperties: true
+        timestamp:
+          type: string
+          format: date-time
+        path:
+          type: string
+          example: /api/v1/talents
+
+  responses:
+    BadRequest:
+      description: Bad request - validation error or invalid input
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: VALIDATION_ERROR
+            message: Invalid input data
+            details:
+              field: email
+              reason: Invalid email format
+            timestamp: 2025-01-15T10:30:00Z
+            path: /api/v1/talents
+
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: UNAUTHORIZED
+            message: Invalid or expired token
+            timestamp: 2025-01-15T10:30:00Z
+            path: /api/v1/talents
+
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: FORBIDDEN
+            message: Insufficient permissions to access this resource
+            timestamp: 2025-01-15T10:30:00Z
+            path: /api/v1/admin/stats
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: NOT_FOUND
+            message: Talent not found
+            timestamp: 2025-01-15T10:30:00Z
+            path: /api/v1/talents/123e4567-e89b-12d3-a456-426614174000
+
+    RateLimitExceeded:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+              description: Request limit per time window
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+              description: Remaining requests in current window
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+              description: Unix timestamp when rate limit resets
+          example:
+            error: RATE_LIMIT_EXCEEDED
+            message: Too many requests. Please try again later.
+            timestamp: 2025-01-15T10:30:00Z
+            path: /api/v1/talents
+
+

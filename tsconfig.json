@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false
+  },
+  "files": [],
+  "references": [
+    { "path": "./packages/core" },
+    { "path": "./packages/shared" },
+    { "path": "./packages/api-backend" },
+    { "path": "./packages/telegram-bot" },
+    { "path": "./packages/admin-web" }
+  ]
+}
+
+
