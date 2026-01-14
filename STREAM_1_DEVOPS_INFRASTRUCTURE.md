@@ -1,0 +1,371 @@
+# STREAM 1: DevOps & Infrastructure Setup
+
+**Developer**: DevOps Engineer  
+**Duration**: 3-5 days (Week 1-4)  
+**Status**: 🟡 PARTIAL - Basic infrastructure done, staging & CI/CD incomplete  
+**Dependencies**: ✅ NONE - Can start immediately  
+**Can Work Parallel**: ✅ YES - Independent of all other streams
+
+---
+
+## 📊 Stream Overview
+
+This stream covers all infrastructure, CI/CD, and deployment setup for the BlihOps Talent Platform. You will set up the development, staging, and production environments using Docker Compose.
+
+---
+
+## ✅ Already Completed
+
+### Infrastructure Foundation
+- [x] pnpm workspace configuration (`pnpm-workspace.yaml`)
+- [x] Root `package.json` setup
+- [x] Docker Compose development environment (`docker-compose.dev.yml`)
+- [x] PostgreSQL 16+ service
+- [x] Redis 7+ service
+- [x] Environment template (`.env.example`)
+- [x] Git repository with `.gitignore`
+- [x] Dockerfile templates (API, Bot, Admin)
+
+### Current Docker Services
+- PostgreSQL 16+ (Port: 5432)
+- Redis 7+ (Port: 6379)
+- Volume: `app_storage` for file storage
+
+---
+
+## 🚀 Tasks to Complete
+
+### TASK 1.1: Staging Environment Setup (1-2 days)
+**Priority**: High  
+**Status**: ❌ NOT STARTED
+
+#### Subtask 1.1.1: Staging Docker Compose
+- [x] Review `docker-compose.staging.yml` file
+- [x] Configure staging-specific environment variables
+- [x] Set up staging database (separate from dev)
+- [x] Set up staging Redis instance
+- [x] Configure staging storage volumes
+- [x] Test staging environment startup
+- [x] Document staging deployment process
+
+**Files to modify**:
+- `docker-compose.staging.yml`
+- `docs/ENV_TEMPLATE.md`
+
+**Acceptance Criteria**:
+- Staging environment can be started with `docker-compose -f docker-compose.staging.yml up`
+- All services (PostgreSQL, Redis) are running
+- Staging database is separate from development database
+- Environment variables are properly configured
+
+---
+
+#### Subtask 1.1.2: Production Docker Compose Review
+- [x] Review `docker-compose.yml` (production)
+- [x] Validate production configuration
+- [x] Ensure production secrets management strategy
+- [x] Document production deployment checklist
+- [x] Add health checks to all services
+- [x] Configure restart policies (always)
+- [x] Set resource limits (CPU, memory)
+
+**Files to modify**:
+- `docker-compose.yml`
+- `docs/deployment.md` (create if missing)
+
+**Acceptance Criteria**:
+- Production Docker Compose is ready for VPS deployment
+- Health checks are configured for all services
+- Restart policies ensure services recover from failures
+- Resource limits prevent resource exhaustion
+
+---
+
+ stability
+- CI/CD pipeline status
+- Backup/recovery testing results
+- Blockers for other teams
+
+### TASK 1.2: CI/CD Pipeline Enhancement (2-3 days)
+**Priority**: High  
+**Status**: ✅ COMPLETE - CI pipeline working, deployment pipelines created (deployment commands pending)
+
+#### Subtask 1.2.1: GitHub Actions Workflow Enhancement
+- [x] Review existing `.github/workflows/` files
+- [x] Enhance automated testing pipeline
+  - [x] Add unit test execution for all packages
+  - [x] Add linting checks (ESLint)
+  - [x] Add formatting checks (Prettier)
+  - [x] Add type checking (TypeScript)
+- [x] Add build pipeline
+  - [x] Build all packages (`pnpm build`)
+  - [x] Validate builds succeed
+  - [x] Cache dependencies for faster builds
+- [ ] Add Docker image build (future)
+  - Placeholder for Docker image builds
+  - Docker registry configuration
+
+**Files created/modified**:
+- ✅ `.github/workflows/ci.yml` - Complete and working
+- ⚠️ `.github/workflows/test.yml` - Integrated into ci.yml
+
+**Acceptance Criteria**:
+- ✅ All PRs trigger automated testing
+- ✅ Linting, formatting, and type checking run on every commit
+- ⚠️ Build failures currently use continue-on-error (for development phase)
+- ✅ CI pipeline completes in <5 minutes (actual: ~24 seconds)
+
+---
+
+#### Subtask 1.2.2: Deployment Pipeline (Staging)
+- [x] Create staging deployment workflow
+- [x] Configure auto-deploy to staging on `develop` branch push
+- [x] Add deployment verification steps (structure created)
+  - [ ] Health check endpoints (placeholder - needs implementation)
+  - [ ] Smoke tests (placeholder - needs implementation)
+- [x] Add rollback strategy (placeholder)
+- [ ] Document deployment process
+
+**Files created**:
+- ✅ `.github/workflows/cd-staging.yml` - Created with structure
+
+**Acceptance Criteria**:
+- ✅ Staging workflow triggers on `develop` branch push
+- ⚠️ Deployment commands are placeholders (need actual deployment logic)
+- ⚠️ Health checks are placeholders (need implementation)
+- ⚠️ Failed deployments trigger alerts (needs notification setup)
+
+---
+
+#### Subtask 1.2.3: Production Deployment Pipeline
+- [x] Create production deployment workflow
+- [x] Require manual approval for production deployments (via GitHub environment)
+- [ ] Add production deployment checklist
+- [x] Add production smoke tests (structure created, needs implementation)
+- [ ] Document rollback procedure
+
+**Files created**:
+- ✅ `.github/workflows/cd-production.yml` - Created with manual approval
+- ❌ `docs/DEPLOYMENT_CHECKLIST.md` - Not yet created
+
+**Acceptance Criteria**:
+- ✅ Production deployments require manual approval (GitHub environment)
+- ⚠️ Deployment checklist document needs to be created
+- ⚠️ Rollback procedure needs to be documented and tested
+
+---
+
+### TASK 1.3: Backup & Recovery Strategy (1 day)
+**Priority**: Medium  
+**Status**: ❌ NOT STARTED
+
+#### Subtask 1.3.1: Database Backup Strategy
+- [ ] Create automated backup scripts
+  - PostgreSQL full backup daily at 2 AM
+  - Incremental backups every 6 hours
+  - Backup retention: 30 days
+- [ ] Test backup restoration
+- [ ] Document backup/restore procedures
+- [ ] Set up backup monitoring/alerts
+
+**Files to create**:
+- `scripts/backup-database.sh`
+- `scripts/restore-database.sh`
+- `docs/BACKUP_RECOVERY.md`
+
+**Backup Script Template**:
+```bash
+#!/bin/bash
+# Backup PostgreSQL database
+BACKUP_DIR="/backups/postgresql"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+# Create backup directory
+mkdir -p $BACKUP_DIR
+
+# Full backup
+docker exec blihops-postgres pg_dump -U postgres blihops > $BACKUP_DIR/backup_$TIMESTAMP.sql
+
+# Compress backup
+gzip $BACKUP_DIR/backup_$TIMESTAMP.sql
+
+# Remove backups older than 30 days
+find $BACKUP_DIR -name "backup_*.sql.gz" -mtime +30 -delete
+
+echo "Backup completed: backup_$TIMESTAMP.sql.gz"
+```
+
+**Acceptance Criteria**:
+- Automated backups run daily
+- Backups are stored in `/backups/postgresql/`
+- Restore procedure is tested and documented
+- Old backups are automatically cleaned up
+
+---
+
+#### Subtask 1.3.2: Storage Backup Strategy
+- [ ] Create storage volume backup scripts
+  - Daily backup at 2 AM (same as database)
+  - Retention: 30 days
+- [ ] Test file restoration
+- [ ] Document file recovery procedures
+
+**Files to create**:
+- `scripts/backup-storage.sh`
+- `scripts/restore-storage.sh`
+
+**Storage Backup Script Template**:
+```bash
+#!/bin/bash
+# Backup storage volume
+BACKUP_DIR="/backups/storage"
+STORAGE_DIR="/var/lib/blihops/storage"
+TIMESTAMP=$(date +%Y%m%d)
+
+mkdir -p $BACKUP_DIR
+
+# Create tar archive
+tar -czf $BACKUP_DIR/storage-$TIMESTAMP.tar.gz $STORAGE_DIR
+
+# Remove backups older than 30 days
+find $BACKUP_DIR -name "storage-*.tar.gz" -mtime +30 -delete
+
+echo "Storage backup completed: storage-$TIMESTAMP.tar.gz"
+```
+
+**Acceptance Criteria**:
+- Storage backups run daily
+- Backups are compressed and stored efficiently
+- File restoration works correctly
+
+---
+
+### TASK 1.4: Monitoring & Logging Infrastructure (1 day)
+**Priority**: Medium  
+**Status**: ❌ NOT STARTED - Will be needed for Phase 6
+
+#### Subtask 1.4.1: Logging Infrastructure
+- [ ] Configure centralized logging (if needed)
+- [ ] Set up log rotation
+- [ ] Configure log retention policies
+- [ ] Document logging best practices
+
+**Note**: This can be implemented in Phase 6 (Deployment) but plan now.
+
+**Acceptance Criteria**:
+- Logs are centralized and searchable
+- Log rotation prevents disk space issues
+- Log retention aligns with compliance requirements
+
+---
+
+## 📋 Testing Requirements
+
+### Test 1: Development Environment
+- [ ] Start development environment: `docker-compose -f docker-compose.dev.yml up`
+- [ ] Verify PostgreSQL is accessible on port 5432
+- [ ] Verify Redis is accessible on port 6379
+- [ ] Verify volumes are created and mounted
+- [ ] Verify services restart on failure
+
+### Test 2: Staging Environment
+- [ ] Start staging environment: `docker-compose -f docker-compose.staging.yml up`
+- [ ] Verify all services are healthy
+- [ ] Verify staging database is separate from dev
+- [ ] Run smoke tests
+
+### Test 3: CI/CD Pipeline
+- [ ] Create a test PR and verify CI runs
+- [ ] Verify linting catches errors
+- [ ] Verify type checking catches errors
+- [ ] Verify builds succeed
+- [ ] Verify failed builds block merges
+
+### Test 4: Backup & Recovery
+- [ ] Run backup scripts manually
+- [ ] Verify backups are created
+- [ ] Restore from backup to a test environment
+- [ ] Verify data integrity after restoration
+
+---
+
+## 🎯 Definition of Done
+
+### Infrastructure
+- ✅ Development environment is stable and well-documented
+- ✅ Staging environment is set up and deployable
+- ✅ Production Docker Compose is ready for VPS deployment
+- ✅ All services have health checks and restart policies
+
+### CI/CD
+- ✅ Automated testing runs on every PR
+- ✅ Linting, formatting, and type checking are enforced
+- ✅ Staging auto-deploys on `main` branch
+- ✅ Production deployments require manual approval
+
+### Backup & Recovery
+- ✅ Automated backups run daily
+- ✅ Backup restoration is tested and documented
+- ✅ Backup monitoring/alerts are configured
+
+### Documentation
+- ✅ All infrastructure is documented
+- ✅ Deployment procedures are clear
+- ✅ Backup/recovery procedures are documented
+- ✅ Troubleshooting guide exists
+
+---
+
+## 📂 Key Files
+
+### Configuration Files
+- `docker-compose.dev.yml` - Development environment
+- `docker-compose.staging.yml` - Staging environment
+- `docker-compose.yml` - Production environment
+- `.env.example` - Environment variable template
+
+### Scripts
+- `scripts/backup-database.sh` - Database backup
+- `scripts/restore-database.sh` - Database restore
+- `scripts/backup-storage.sh` - Storage backup
+- `scripts/restore-storage.sh` - Storage restore
+
+### Documentation
+- `docs/ENV_TEMPLATE.md` - Environment variables
+- `docs/BACKUP_RECOVERY.md` - Backup/recovery procedures
+- `docs/DEPLOYMENT_CHECKLIST.md` - Deployment checklist
+
+### CI/CD
+- `.github/workflows/ci.yml` - Continuous integration
+- `.github/workflows/deploy-staging.yml` - Staging deployment
+- `.github/workflows/deploy-production.yml` - Production deployment
+
+---
+
+## 🚨 Blockers & Dependencies
+
+### Current Blockers
+- ✅ NONE - This stream can start immediately
+
+### Dependencies for Other Streams
+- **Stream 2 (Backend)**: Needs development environment from Task 1.1
+- **Stream 5 (Bot)**: Needs development environment from Task 1.1
+- **Stream 6 (Admin)**: Needs development environment from Task 1.1
+- **Stream 8 (Deployment)**: Needs production infrastructure from Task 1.1.2
+
+---
+
+## 📞 Communication
+
+### Daily Standup Topics
+- Infrastructureer Teams
+- Notify backend team when staging environment is ready
+- Share deployment documentation with all teams
+- Coordinate production deployment timing
+
+---
+
+**Last Updated**: 2026-01-14  
+**Next Review**: Daily standup  
+**Owner**: DevOps Engineer
+
