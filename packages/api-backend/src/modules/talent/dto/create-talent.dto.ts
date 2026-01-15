@@ -10,6 +10,7 @@ import {
   MinLength,
   MaxLength,
   ArrayMaxSize,
+  ArrayMinSize,
 } from 'class-validator';
 import { ServiceCategory, ExperienceLevel, AvailabilityStatus, EngagementType } from '@blihops/shared';
 
@@ -59,6 +60,7 @@ export class CreateTalentDto {
     example: ['TypeScript', 'NestJS', 'PostgreSQL', 'React'],
   })
   @IsArray()
+  @ArrayMinSize(1)
   @ArrayMaxSize(50)
   @IsString({ each: true })
   skills: string[];

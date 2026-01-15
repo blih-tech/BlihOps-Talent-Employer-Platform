@@ -4,7 +4,7 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: blihops-postgres
-    restart: unless-stopped
+    restart: always
     ports:
       - '5432:5432'
     environment:
@@ -19,13 +19,22 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
     networks:
       - blihops-network
 
   redis:
     image: redis:7-alpine
     container_name: blihops-redis
-    restart: unless-stopped
+    restart: always
     ports:
       - '6379:6379'
     command: redis-server --appendonly yes --maxmemory 2gb --maxmemory-policy allkeys-lru
@@ -36,6 +45,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
     networks:
       - blihops-network
 
@@ -54,5 +72,7 @@ volumes:
 networks:
   blihops-network:
     driver: bridge
+
+
 
 

@@ -732,6 +732,8 @@ erDiagram
     ADMIN ||--o{ TALENT : approves
     ADMIN ||--o{ JOB : creates
     ADMIN ||--o{ AUDIT_LOG : performs
+    JOB ||--o{ APPLICATION : receives
+    TALENT ||--o{ APPLICATION : submits
     
     TALENT {
         uuid id PK
@@ -744,10 +746,12 @@ erDiagram
         enum availability "Indexed"
         enum engagementPreference
         varchar cvUrl
-        enum status "Indexed"
+        enum status "Indexed" "Pending, Approved, Rejected, Hired, Inactive"
+        text rejectionReason "If status is Rejected"
         jsonb metadata "JSONB for flexible fields"
         timestamptz createdAt
         timestamptz updatedAt
+        timestamptz approvedAt
     }
     
     JOB {
@@ -759,8 +763,28 @@ erDiagram
         text[] requiredSkills "GIN Index"
         enum engagementType
         varchar duration
-        enum status "Indexed"
+        enum status "Indexed" "Pending, Published, Rejected, Closed/Expired"
+        text rejectionReason "If status is Rejected"
         jsonb metadata "JSONB for flexible fields"
+        timestamptz createdAt
+        timestamptz updatedAt
+        timestamptz publishedAt
+        timestamptz closedAt
+    }
+    
+    APPLICATION {
+        uuid id PK
+        uuid jobId FK "References JOB"
+        uuid talentId FK "References TALENT"
+        enum status "New, Shortlisted, Hired, Rejected"
+        decimal matchScore "0-100"
+        jsonb matchBreakdown "Score components"
+        text notes "Employer notes"
+        text rejectionReason "If rejected"
+        timestamptz appliedAt
+        timestamptz shortlistedAt
+        timestamptz hiredAt
+        timestamptz rejectedAt
         timestamptz createdAt
         timestamptz updatedAt
     }
@@ -797,6 +821,10 @@ CREATE INDEX idx_talent_category ON talents(service_category);
 CREATE INDEX idx_talent_skills ON talents USING GIN(skills);
 CREATE INDEX idx_job_status ON jobs(status) WHERE status = 'published';
 CREATE INDEX idx_job_category ON jobs(service_category);
+CREATE INDEX idx_application_job_id ON applications(job_id);
+CREATE INDEX idx_application_talent_id ON applications(talent_id);
+CREATE INDEX idx_application_status ON applications(status);
+CREATE INDEX idx_application_match_score ON applications(match_score) WHERE match_score > 70;
 CREATE INDEX idx_job_skills ON jobs USING GIN(required_skills);
 CREATE INDEX idx_audit_timestamp ON audit_logs(timestamp DESC);
 CREATE INDEX idx_audit_resource ON audit_logs(resource_type, resource_id);

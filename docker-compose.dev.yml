@@ -1,17 +1,46 @@
-version: '3.8'
-
 services:
   postgres:
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-blihops_dev}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev_password}
-      POSTGRES_DB: ${POSTGRES_DB:-blihops_dev_db}
+    image: postgres:16-alpine
+    container_name: blihops-postgres-dev
+    restart: always
     ports:
       - '5432:5432'
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-blihops}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev_password_123}
+      POSTGRES_DB: ${POSTGRES_DB:-blihops_db}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-blihops}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   redis:
-    command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy allkeys-lru
+    image: redis:7-alpine
+    container_name: blihops-redis-dev
+    restart: always
     ports:
       - '6379:6379'
+    command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_dev_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  postgres_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+
+
 
 

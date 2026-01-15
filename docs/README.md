@@ -36,6 +36,12 @@ Welcome to the BlihOps Talent Platform documentation.
   - Job management
   - Matching insights
   - Approval workflows
+- **[Employer Job Management Guide](./employer-job-management.md)** - Guide for employers/BlihOps
+  - Job post status management (Pending, Published, Rejected, Closed/Expired)
+  - View all applicants
+  - Application details and management
+  - Shortlist, hire, and reject candidates
+  - Employee/talent status management
 
 ### Deployment
 - **[Deployment Guide](./deployment.md)** - Production deployment instructions

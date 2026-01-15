@@ -36,3 +36,6 @@ export interface UpdateAdminDto {
   preferences?: Record<string, unknown>;
 }
 
+
+
+

@@ -71,3 +71,6 @@ export interface FilterTalentDto {
   offset?: number;
 }
 
+
+
+

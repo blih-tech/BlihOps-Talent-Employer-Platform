@@ -3,3 +3,6 @@ import { CreateTalentDto } from './create-talent.dto';
 
 export class UpdateTalentDto extends PartialType(CreateTalentDto) {}
 
+
+
+

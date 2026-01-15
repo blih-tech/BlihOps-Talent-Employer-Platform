@@ -63,3 +63,6 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Start the application
 CMD ["pnpm", "start"]
 
+
+
+

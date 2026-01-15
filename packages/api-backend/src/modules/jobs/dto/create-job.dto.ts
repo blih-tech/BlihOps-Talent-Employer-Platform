@@ -1,36 +1,34 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString,
-  IsArray,
   IsEnum,
+  IsArray,
   IsOptional,
   MinLength,
   MaxLength,
   ArrayMaxSize,
 } from 'class-validator';
-import { ServiceCategory, ExperienceLevel, EngagementType } from '@blihops/shared';
+import { ServiceCategory, ExperienceLevel, EngagementType } from '@prisma/client';
 
 export class CreateJobDto {
   @ApiProperty({
     description: 'Job title',
-    minLength: 5,
+    minLength: 3,
     maxLength: 200,
     example: 'Senior Full-Stack Developer',
   })
   @IsString()
-  @MinLength(5)
+  @MinLength(3)
   @MaxLength(200)
   title: string;
 
   @ApiProperty({
     description: 'Job description',
-    minLength: 50,
-    maxLength: 5000,
+    minLength: 10,
     example: 'We are looking for an experienced full-stack developer...',
   })
   @IsString()
-  @MinLength(50)
-  @MaxLength(5000)
+  @MinLength(10)
   description: string;
 
   @ApiProperty({
@@ -53,14 +51,13 @@ export class CreateJobDto {
   @IsString({ each: true })
   requiredSkills: string[];
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     enum: ExperienceLevel,
-    description: 'Preferred experience level',
+    description: 'Required experience level',
     example: ExperienceLevel.SENIOR,
   })
-  @IsOptional()
   @IsEnum(ExperienceLevel)
-  preferredExperienceLevel?: ExperienceLevel;
+  experienceLevel: ExperienceLevel;
 
   @ApiProperty({
     enum: EngagementType,
@@ -79,5 +76,15 @@ export class CreateJobDto {
   @IsString()
   @MaxLength(100)
   duration?: string;
+
+  @ApiPropertyOptional({
+    description: 'Budget or salary range',
+    maxLength: 100,
+    example: '$5000 - $7000/month',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  budget?: string;
 }
 

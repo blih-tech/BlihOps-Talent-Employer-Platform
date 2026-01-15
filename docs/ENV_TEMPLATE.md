@@ -52,11 +52,15 @@ LOG_LEVEL=info
 RATE_LIMIT_TTL=60
 RATE_LIMIT_MAX_REQUESTS=100
 
-# Staging Environment (optional)
+# Staging Environment Configuration
+# These variables are used when running docker-compose.staging.yml
 POSTGRES_USER_STAGING=blihops_staging
 POSTGRES_PASSWORD_STAGING=change_me_staging_password
 POSTGRES_DB_STAGING=blihops_staging_db
 APP_STORAGE_PATH_STAGING=./storage-staging
+# Staging uses different ports: PostgreSQL (5433), Redis (6380)
+# Staging DATABASE_URL: postgresql://${POSTGRES_USER_STAGING}:${POSTGRES_PASSWORD_STAGING}@localhost:5433/${POSTGRES_DB_STAGING}?schema=public
+# Staging REDIS_URL: redis://localhost:6380
 ```
 
 ## `packages/api-backend/.env.example`
@@ -133,10 +137,38 @@ NEXT_PUBLIC_SENTRY_DSN=
 LOG_LEVEL=info
 ```
 
+## Staging Environment Setup
+
+The staging environment uses separate Docker Compose configuration and different ports to avoid conflicts with development:
+
+**Staging Ports:**
+- PostgreSQL: `5433` (development uses `5432`)
+- Redis: `6380` (development uses `6379`)
+
+**Starting Staging Environment:**
+```bash
+# Start staging services
+docker-compose -f docker-compose.staging.yml up -d
+
+# View staging logs
+docker-compose -f docker-compose.staging.yml logs -f
+
+# Stop staging services
+docker-compose -f docker-compose.staging.yml down
+```
+
+**Staging Environment Variables:**
+- All staging services use variables with `_STAGING` suffix
+- Staging database and Redis are completely separate from development
+- Staging storage volume: `app_storage_staging` (mounted to `./storage-staging` by default)
+
 ## Usage
 
 1. Copy the appropriate template to create `.env` files in each package directory
 2. Update all values marked with `change_me_*`
 3. Never commit `.env` files to version control
 4. Use `scripts/validate-env.js` to validate environment variables before starting the application
+5. For staging, ensure staging-specific variables are set in your `.env` file
+
+
 

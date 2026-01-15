@@ -96,3 +96,6 @@ We need to select an ORM for the NestJS backend that will work with PostgreSQL 1
 ✅ **Decision Made** - Prisma selected as the ORM for this project.
 
 
+
+
+

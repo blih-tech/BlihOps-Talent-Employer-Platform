@@ -5,7 +5,8 @@ export enum TalentStatus {
   PENDING = 'PENDING',
   APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
-  ARCHIVED = 'ARCHIVED',
+  HIRED = 'HIRED',
+  INACTIVE = 'INACTIVE',
 }
 
 /**
@@ -13,11 +14,10 @@ export enum TalentStatus {
  */
 export enum JobStatus {
   DRAFT = 'DRAFT',
-  PENDING = 'PENDING', // Awaiting approval
-  PUBLISHED = 'PUBLISHED', // Live and accepting applications
-  REJECTED = 'REJECTED', // Review and make adjustments
-  CLOSED = 'CLOSED', // No longer accepting applications
-  EXPIRED = 'EXPIRED', // Expired job posting
+  PENDING = 'PENDING',
+  PUBLISHED = 'PUBLISHED',
+  ARCHIVED = 'ARCHIVED',
+  CLOSED = 'CLOSED',
 }
 
 /**

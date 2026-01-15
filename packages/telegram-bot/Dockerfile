@@ -54,3 +54,6 @@ ENV NODE_ENV=production
 # Start the application
 CMD ["node", "packages/telegram-bot/dist/main.js"]
 
+
+
+

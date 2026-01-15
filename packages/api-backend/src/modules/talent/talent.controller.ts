@@ -60,7 +60,6 @@ export class TalentController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 429, description: 'Rate limit exceeded' })
   async findAll(@Query() query: TalentQueryDto) {
-    // TODO: Implement actual logic
     return this.talentService.findAll(query);
   }
 
@@ -82,7 +81,6 @@ export class TalentController {
     description: 'Talent with this Telegram ID already exists',
   })
   async create(@Body() createTalentDto: CreateTalentDto) {
-    // TODO: Implement actual logic
     return this.talentService.create(createTalentDto);
   }
 
@@ -104,7 +102,6 @@ export class TalentController {
   })
   @ApiResponse({ status: 404, description: 'Talent not found' })
   async findOne(@Param('id') id: string) {
-    // TODO: Implement actual logic
     return this.talentService.findOne(id);
   }
 
@@ -127,7 +124,6 @@ export class TalentController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   @ApiResponse({ status: 404, description: 'Talent not found' })
   async update(@Param('id') id: string, @Body() updateTalentDto: UpdateTalentDto) {
-    // TODO: Implement actual logic
     return this.talentService.update(id, updateTalentDto);
   }
 
@@ -135,7 +131,7 @@ export class TalentController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Delete talent profile',
-    description: 'Soft delete talent profile',
+    description: 'Soft delete talent profile (sets status to INACTIVE)',
   })
   @ApiParam({
     name: 'id',
@@ -143,10 +139,9 @@ export class TalentController {
     format: 'uuid',
     description: 'Talent UUID',
   })
-  @ApiResponse({ status: 204, description: 'Talent deleted successfully' })
+  @ApiResponse({ status: 200, description: 'Talent deleted successfully' })
   @ApiResponse({ status: 404, description: 'Talent not found' })
   async remove(@Param('id') id: string) {
-    // TODO: Implement actual logic
     return this.talentService.remove(id);
   }
 
@@ -169,7 +164,8 @@ export class TalentController {
   @ApiResponse({ status: 404, description: 'Talent not found' })
   @ApiResponse({ status: 409, description: 'Talent already approved' })
   async approve(@Param('id') id: string) {
-    // TODO: Implement actual logic
+    // TODO: Get adminId from authenticated user when auth is implemented
+    // For now, adminId is optional
     return this.talentService.approve(id);
   }
 
@@ -190,8 +186,10 @@ export class TalentController {
     schema: { $ref: '#/components/schemas/Talent' },
   })
   @ApiResponse({ status: 404, description: 'Talent not found' })
+  @ApiResponse({ status: 409, description: 'Talent already rejected' })
   async reject(@Param('id') id: string, @Body('reason') reason?: string) {
-    // TODO: Implement actual logic
+    // TODO: Get adminId from authenticated user when auth is implemented
+    // For now, adminId is optional
     return this.talentService.reject(id, reason);
   }
 }

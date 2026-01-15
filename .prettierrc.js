@@ -1,3 +1,6 @@
-module.exports = require('@blihops/prettier-config');
+module.exports = require('./packages/prettier-config');
+
+
+
 
 

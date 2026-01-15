@@ -58,3 +58,6 @@ export type CreateJobInput = z.infer<typeof CreateJobSchema>;
 export type UpdateJobInput = z.infer<typeof UpdateJobSchema>;
 export type FilterJobInput = z.infer<typeof FilterJobSchema>;
 
+
+
+

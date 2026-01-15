@@ -78,3 +78,6 @@ export type CreateTalentInput = z.infer<typeof CreateTalentSchema>;
 export type UpdateTalentInput = z.infer<typeof UpdateTalentSchema>;
 export type FilterTalentInput = z.infer<typeof FilterTalentSchema>;
 
+
+
+

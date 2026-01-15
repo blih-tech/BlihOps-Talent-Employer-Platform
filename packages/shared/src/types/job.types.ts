@@ -62,3 +62,6 @@ export interface FilterJobDto {
   offset?: number;
 }
 
+
+
+

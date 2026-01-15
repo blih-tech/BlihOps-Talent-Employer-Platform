@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsEnum, IsString, IsInt, Min, Max, IsUUID } from 'class-validator';
+import { IsOptional, IsEnum, IsString, IsInt, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ServiceCategory, JobStatus } from '@blihops/shared';
 
@@ -20,15 +20,15 @@ export class JobQueryDto {
     description: 'Number of items per page',
     minimum: 1,
     maximum: 100,
-    default: 20,
-    example: 20,
+    default: 10,
+    example: 10,
   })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(100)
-  limit?: number = 20;
+  limit?: number = 10;
 
   @ApiPropertyOptional({
     enum: JobStatus,
@@ -44,15 +44,7 @@ export class JobQueryDto {
   })
   @IsOptional()
   @IsEnum(ServiceCategory)
-  category?: ServiceCategory;
-
-  @ApiPropertyOptional({
-    description: 'Filter by creator admin ID',
-    format: 'uuid',
-  })
-  @IsOptional()
-  @IsUUID()
-  createdBy?: string;
+  serviceCategory?: ServiceCategory;
 
   @ApiPropertyOptional({
     description: 'Search in title and description',
@@ -61,23 +53,6 @@ export class JobQueryDto {
   @IsOptional()
   @IsString()
   search?: string;
-
-  @ApiPropertyOptional({
-    description: 'Sort field',
-    enum: ['createdAt', 'title', 'publishedAt'],
-    default: 'createdAt',
-  })
-  @IsOptional()
-  @IsEnum(['createdAt', 'title', 'publishedAt'])
-  sortBy?: string = 'createdAt';
-
-  @ApiPropertyOptional({
-    description: 'Sort order',
-    enum: ['asc', 'desc'],
-    default: 'desc',
-  })
-  @IsOptional()
-  @IsEnum(['asc', 'desc'])
-  sortOrder?: 'asc' | 'desc' = 'desc';
 }
+
 

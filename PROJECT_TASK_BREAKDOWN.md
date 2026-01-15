@@ -157,10 +157,9 @@
   - Telegram bot Dockerfile
   - Admin web Dockerfile
 - [x] **Subtask 1.1.3.3**: Environment configuration
-  - `.env.example` templates (in `docs/ENV_TEMPLATE.md`)
-  - Actual `.env` files created for all packages (root, api-backend, telegram-bot, admin-web)
-  - Environment validation (`scripts/validate-env.js`)
-  - Secrets management strategy (`.env` files in `.gitignore`)
+  - `.env.example` templates
+  - Environment validation
+  - Secrets management strategy
 - [x] **Subtask 1.1.3.4**: Staging environment setup
   - Staging Docker Compose
   - Staging database
@@ -170,21 +169,21 @@
 **Parallel with**: 1.1.1, 1.1.2
 
 #### Task 1.1.4: CI/CD Pipeline Setup
-- [x] **Subtask 1.1.4.1**: Choose CI/CD platform
+- [ ] **Subtask 1.1.4.1**: Choose CI/CD platform
   - GitHub Actions / GitLab CI / Jenkins
-  - Decision and setup (GitHub Actions selected and configured)
-- [x] **Subtask 1.1.4.2**: Automated testing pipeline
+  - Decision and setup
+- [ ] **Subtask 1.1.4.2**: Automated testing pipeline
   - Unit test execution
   - Linting and formatting checks
   - Type checking
-- [x] **Subtask 1.1.4.3**: Build pipeline
+- [ ] **Subtask 1.1.4.3**: Build pipeline
   - Package builds
-  - Docker image builds (placeholder for future)
-  - Artifact storage (placeholder for future)
-- [x] **Subtask 1.1.4.4**: Deployment pipeline
+  - Docker image builds
+  - Artifact storage
+- [ ] **Subtask 1.1.4.4**: Deployment pipeline
   - Staging auto-deploy
   - Production manual approval
-  - Rollback strategy (placeholder for future)
+  - Rollback strategy
 
 **Dependencies**: 1.1.1  
 **Parallel with**: 1.1.2, 1.1.3
@@ -418,71 +417,24 @@
   - CRUD operations
   - Job validation
   - Publishing workflow
-  - Status management (Pending, Published, Rejected, Closed/Expired)
-  - Status transition validation
-  - Real-time status updates
 - [ ] **Subtask 2.3.2.2**: Job controller
   - GET `/api/v1/jobs`
   - GET `/api/v1/jobs/:id`
   - POST `/api/v1/jobs`
   - PATCH `/api/v1/jobs/:id`
   - POST `/api/v1/jobs/:id/publish`
-  - POST `/api/v1/jobs/:id/reject` (with reason)
-  - POST `/api/v1/jobs/:id/close` (close/expire)
-  - POST `/api/v1/jobs/:id/reopen` (reopen closed job)
   - POST `/api/v1/jobs/:id/archive`
 - [ ] **Subtask 2.3.2.3**: Job DTOs
   - CreateJobDto
   - UpdateJobDto
   - FilterJobDto
-  - JobStatusDto (with transition rules)
-  - RejectJobDto (with reason field)
-- [ ] **Subtask 2.3.2.4**: Job status workflow
-  - Status transition rules validation
-  - Status history tracking
-  - Status change notifications
-  - Audit logging for status changes
-- [ ] **Subtask 2.3.2.5**: Unit tests
+- [ ] **Subtask 2.3.2.4**: Unit tests
   - Service tests
   - Controller tests
-  - Status transition tests
   - Integration tests
 
 **Dependencies**: 2.2.1, 2.2.2  
 **Parallel with**: 2.3.1, 2.3.3
-
-#### Task 2.3.2.6: Application Management (Job Applicants)
-- [ ] **Subtask 2.3.2.6.1**: Application service
-  - Track job applications
-  - Application status management (New, Shortlisted, Hired, Rejected)
-  - Application history tracking
-  - Match score calculation per application
-- [ ] **Subtask 2.3.2.6.2**: Application controller
-  - GET `/api/v1/jobs/:id/applicants` - View all applicants for a job
-  - GET `/api/v1/jobs/:id/applicants/:applicantId` - View application details
-  - POST `/api/v1/jobs/:id/applicants/:applicantId/shortlist` - Shortlist candidate
-  - POST `/api/v1/jobs/:id/applicants/:applicantId/hire` - Hire candidate
-  - POST `/api/v1/jobs/:id/applicants/:applicantId/reject` - Reject candidate
-  - GET `/api/v1/applications` - List all applications (admin)
-- [ ] **Subtask 2.3.2.6.3**: Application DTOs
-  - ApplicationDto (with match score breakdown)
-  - ShortlistApplicationDto (with notes)
-  - HireApplicationDto (with hire date and notes)
-  - RejectApplicationDto (with rejection reason)
-  - ApplicationFilterDto (filter by status, job, talent)
-- [ ] **Subtask 2.3.2.6.4**: Application notifications
-  - Notify talent on shortlist
-  - Notify talent on hire
-  - Notify talent on rejection
-  - Notify employer on new application
-- [ ] **Subtask 2.3.2.6.5**: Application analytics
-  - Application statistics per job
-  - Conversion rates (application → shortlist → hire)
-  - Time-to-hire metrics
-  - Source tracking
-
-**Dependencies**: 2.3.2.1, 2.3.2.2, 2.3.3.1 (for match scores)  
-**Parallel with**: 2.3.3
 
 #### Task 2.3.3: Matching Module
 - [ ] **Subtask 2.3.3.1**: Matching service
@@ -510,14 +462,15 @@
 **Owner**: Backend Developer  
 **Priority**: High  
 **Duration**: 1 week  
+**Status**: ✅ **100% COMPLETE** - Completed 2025-01-15  
 **Dependencies**: 2.2.1, 2.3.1, 2.3.2
 
 #### Task 2.4.1: BullMQ Setup
-- [ ] **Subtask 2.4.1.1**: Redis connection
+- [x] **Subtask 2.4.1.1**: Redis connection ✅
   - Redis client setup
   - Connection pooling
   - Health checks
-- [ ] **Subtask 2.4.1.2**: Queue configuration
+- [x] **Subtask 2.4.1.2**: Queue configuration ✅
   - Queue definitions
   - Queue options (retries, delays)
   - Queue monitoring setup
@@ -526,19 +479,19 @@
 **Parallel with**: 2.4.2
 
 #### Task 2.4.2: Worker Implementation
-- [ ] **Subtask 2.4.2.1**: Publish Talent Worker
+- [x] **Subtask 2.4.2.1**: Publish Talent Worker ✅
   - Process talent approval
   - Publish to Telegram channel
   - Error handling & retries
-- [ ] **Subtask 2.4.2.2**: Publish Job Worker
+- [x] **Subtask 2.4.2.2**: Publish Job Worker ✅
   - Process job approval
   - Publish to Telegram channel
   - Error handling & retries
-- [ ] **Subtask 2.4.2.3**: Notify Talent Worker
+- [x] **Subtask 2.4.2.3**: Notify Talent Worker ✅
   - Match calculation trigger
   - Send notifications
   - Rate limiting
-- [ ] **Subtask 2.4.2.4**: Worker tests
+- [x] **Subtask 2.4.2.4**: Worker tests ✅
   - Unit tests for workers
   - Integration tests
   - Error scenario tests
@@ -552,25 +505,26 @@
 **Owner**: Backend Developer  
 **Priority**: High  
 **Duration**: 3-4 days  
+**Status**: ✅ **100% COMPLETE** - Completed 2025-01-15  
 **Dependencies**: 1.0.2 (file storage decision), 2.2.1
 
 #### Task 2.5.1: File Upload Service
-- [ ] **Subtask 2.5.1.1**: File upload endpoint
-  - POST `/api/v1/files/upload`
-  - File validation (size, type)
-  - Virus scanning (if applicable)
-- [ ] **Subtask 2.5.1.2**: File storage integration
-  - Implement storage adapter (based on 1.0.2)
-  - File metadata storage
-  - File retrieval endpoint
-- [ ] **Subtask 2.5.1.3**: CV handling
-  - CV upload for talents
-  - CV download endpoint
-  - CV update/delete
-- [ ] **Subtask 2.5.1.4**: File cleanup
-  - TTL implementation
-  - Orphaned file cleanup
-  - Scheduled cleanup job
+- [x] **Subtask 2.5.1.1**: File upload endpoint ✅
+  - POST `/api/v1/files/upload` ✅
+  - File validation (size, type) ✅
+  - Virus scanning (if applicable) ✅
+- [x] **Subtask 2.5.1.2**: File storage integration ✅
+  - Implement storage adapter (based on 1.0.2) ✅
+  - File metadata storage ✅
+  - File retrieval endpoint ✅
+- [x] **Subtask 2.5.1.3**: CV handling ✅
+  - CV upload for talents ✅
+  - CV download endpoint ✅
+  - CV update/delete ✅
+- [x] **Subtask 2.5.1.4**: File cleanup ✅
+  - TTL implementation ✅
+  - Orphaned file cleanup ✅
+  - Scheduled cleanup job ✅
 
 **Dependencies**: 1.0.2, 2.2.1  
 **Parallel with**: 2.5.2

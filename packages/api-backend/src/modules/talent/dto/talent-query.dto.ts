@@ -2,6 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsEnum, IsString, IsInt, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ServiceCategory } from '@blihops/shared';
+import { TalentStatus } from '@prisma/client';
 
 export class TalentQueryDto {
   @ApiPropertyOptional({
@@ -32,17 +33,20 @@ export class TalentQueryDto {
 
   @ApiPropertyOptional({
     description: 'Filter by approval status',
-    enum: ['pending', 'approved', 'rejected'],
+    enum: TalentStatus,
+    example: TalentStatus.PENDING,
   })
   @IsOptional()
-  @IsEnum(['pending', 'approved', 'rejected'])
-  status?: string;
+  @Type(() => String)
+  @IsEnum(TalentStatus)
+  status?: TalentStatus;
 
   @ApiPropertyOptional({
     enum: ServiceCategory,
     description: 'Filter by service category',
   })
   @IsOptional()
+  @Type(() => String)
   @IsEnum(ServiceCategory)
   category?: ServiceCategory;
 
@@ -80,4 +84,6 @@ export class TalentQueryDto {
   @IsEnum(['asc', 'desc'])
   sortOrder?: 'asc' | 'desc' = 'desc';
 }
+
+
 

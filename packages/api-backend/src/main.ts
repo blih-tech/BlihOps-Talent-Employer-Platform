@@ -1,10 +1,40 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
+import { getQueueToken } from '@nestjs/bull';
 import { AppModule } from './app.module';
+import { setupBullBoard } from './queue/bull-board.setup';
+import { QUEUE_NAMES } from './queue/queue.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Check JWT_SECRET in development mode
+  const configService = app.get(ConfigService);
+  const nodeEnv = configService.get<string>('NODE_ENV') || 'development';
+  const jwtSecret = configService.get<string>('JWT_SECRET');
+  
+  if (nodeEnv === 'development' && !jwtSecret) {
+    console.warn('');
+    console.warn('⚠️  WARNING: JWT_SECRET is not set!');
+    console.warn('⚠️  Authentication is disabled in development mode.');
+    console.warn('⚠️  Set JWT_SECRET in your .env file to enable authentication.');
+    console.warn('⚠️  Example: JWT_SECRET=your-secure-random-secret-key-min-32-chars');
+    console.warn('');
+  }
+
+  // Setup BullMQ Board for queue monitoring
+  try {
+    const publishTalentQueue = app.get(getQueueToken(QUEUE_NAMES.PUBLISH_TALENT));
+    const publishJobQueue = app.get(getQueueToken(QUEUE_NAMES.PUBLISH_JOB));
+    const notifyTalentQueue = app.get(getQueueToken(QUEUE_NAMES.NOTIFY_TALENT));
+
+    setupBullBoard(app, [publishTalentQueue, publishJobQueue, notifyTalentQueue], configService);
+    console.log('✅ BullMQ Board is available at: /admin/queues');
+  } catch (error) {
+    console.warn('⚠️  Could not set up BullMQ Board. Ensure queues are properly configured.', error);
+  }
 
   // Global prefix for API versioning
   app.setGlobalPrefix('api/v1');
@@ -82,4 +112,6 @@ async function bootstrap() {
 }
 
 bootstrap();
+
+
 
