@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 /**
  * Telegram webhook update types
@@ -46,6 +47,15 @@ export interface TelegramCallbackQuery {
 @Injectable()
 export class TelegramService {
   private readonly logger = new Logger(TelegramService.name);
+  private readonly botToken: string;
+  private readonly telegramApiUrl = 'https://api.telegram.org/bot';
+
+  constructor(private configService: ConfigService) {
+    this.botToken = this.configService.get<string>('TELEGRAM_BOT_TOKEN', '');
+    if (!this.botToken) {
+      this.logger.warn('TELEGRAM_BOT_TOKEN not configured. Channel publishing will not work.');
+    }
+  }
 
   /**
    * Handle incoming Telegram webhook update
@@ -134,6 +144,83 @@ export class TelegramService {
     // TODO: Process edited channel post when bot is implemented
     return { ok: true };
   }
+
+  /**
+   * Send message to Telegram channel
+   * @param channelId - Telegram channel ID (e.g., -1002985721031)
+   * @param message - Message text to send
+   * @param parseMode - Optional parse mode (Markdown, HTML)
+   * @returns Message ID if successful, null if failed
+   */
+  async sendMessageToChannel(
+    channelId: string,
+    message: string,
+    parseMode?: 'Markdown' | 'MarkdownV2' | 'HTML',
+  ): Promise<number | null> {
+    if (!this.botToken) {
+      this.logger.error('Cannot send message: TELEGRAM_BOT_TOKEN not configured');
+      return null;
+    }
+
+    try {
+      const url = `${this.telegramApiUrl}${this.botToken}/sendMessage`;
+      const payload: any = {
+        chat_id: channelId,
+        text: message,
+      };
+
+      if (parseMode) {
+        payload.parse_mode = parseMode;
+      }
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json() as { ok: boolean; description?: string; result?: { message_id: number } };
+
+      if (!response.ok || !data.ok) {
+        this.logger.error(
+          `Failed to send message to channel ${channelId}: ${data.description || response.statusText}`,
+        );
+        return null;
+      }
+
+      this.logger.log(`Successfully sent message to channel ${channelId}. Message ID: ${data.result?.message_id}`);
+      return data.result?.message_id || null;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Error sending message to channel ${channelId}:`, errorMessage);
+      return null;
+    }
+  }
+
+  /**
+   * Send message to Jobs channel
+   * @param message - Message text to send
+   * @returns Message ID if successful, null if failed
+   */
+  async sendMessageToJobsChannel(message: string): Promise<number | null> {
+    const channelId =
+      this.configService.get<string>('TELEGRAM_CHANNEL_ID_JOBS', '-1002985721031');
+    return this.sendMessageToChannel(channelId, message, 'Markdown');
+  }
+
+  /**
+   * Send message to Talents channel
+   * @param message - Message text to send
+   * @returns Message ID if successful, null if failed
+   */
+  async sendMessageToTalentsChannel(message: string): Promise<number | null> {
+    const channelId =
+      this.configService.get<string>('TELEGRAM_CHANNEL_ID_TALENTS', '-1003451753461');
+    return this.sendMessageToChannel(channelId, message, 'Markdown');
+  }
 }
+
 
 

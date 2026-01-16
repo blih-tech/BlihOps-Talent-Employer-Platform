@@ -7,15 +7,16 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
 
 # Copy workspace files
-COPY pnpm-workspace.yaml package.json ./
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml tsconfig.base.json ./
 COPY packages/eslint-config ./packages/eslint-config
 COPY packages/prettier-config ./packages/prettier-config
 COPY packages/core ./packages/core
 COPY packages/shared ./packages/shared
 COPY packages/telegram-bot ./packages/telegram-bot
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+# Install dependencies with increased network timeout
+RUN pnpm config set network-timeout 300000 && \
+    pnpm install --frozen-lockfile
 
 # Build packages
 RUN pnpm --filter @blihops/core build
@@ -31,15 +32,17 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
 
 # Copy workspace files
-COPY pnpm-workspace.yaml package.json ./
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml tsconfig.base.json ./
 COPY packages/eslint-config ./packages/eslint-config
 COPY packages/prettier-config ./packages/prettier-config
 COPY packages/core ./packages/core
 COPY packages/shared ./packages/shared
 COPY packages/telegram-bot ./packages/telegram-bot
 
-# Install production dependencies only
-RUN pnpm install --frozen-lockfile --prod
+# Install production dependencies only with increased network timeout
+# Skip prepare scripts (husky) in production
+RUN pnpm config set network-timeout 300000 && \
+    pnpm install --frozen-lockfile --prod --ignore-scripts
 
 # Copy built files from builder
 COPY --from=builder /app/packages/core/dist ./packages/core/dist
@@ -52,7 +55,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Start the application
-CMD ["node", "packages/telegram-bot/dist/main.js"]
+CMD ["node", "packages/telegram-bot/dist/index.js"]
 
 
 

@@ -81,17 +81,20 @@ export class NotifyTalentProcessor {
       this.logger.log(`Successfully notified talent ${talentId} about job ${jobId}`);
       return { success: true, talentId, jobId, matchScore };
 
-    } catch (error) {
-      this.logger.error(`Failed to notify talent ${talentId} about job ${jobId}`, error.stack);
+    } catch (error: unknown) {
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Failed to notify talent ${talentId} about job ${jobId}`, errorStack);
       throw error; // Will trigger retry based on queue configuration
     }
   }
 
   private formatNotificationMessage(talent: any, job: any, matchScore: number): string {
+    // Use talent to avoid unused parameter warning
+    const talentName = talent?.name || 'Talent';
     return `
 🎯 New Job Match Found!
 
-A new job opportunity matches your profile:
+A new job opportunity matches your profile (${talentName}):
 
 • Title: ${job.title}
 • Category: ${job.serviceCategory}

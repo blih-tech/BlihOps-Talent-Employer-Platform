@@ -8,7 +8,7 @@ import {
   MaxLength,
   ArrayMaxSize,
 } from 'class-validator';
-import { ServiceCategory, ExperienceLevel, EngagementType } from '@prisma/client';
+import { ServiceCategory, ExperienceLevel, EngagementType } from '@blihops/shared';
 
 export class CreateJobDto {
   @ApiProperty({

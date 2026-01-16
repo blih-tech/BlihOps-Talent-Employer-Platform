@@ -6,3 +6,4 @@ export class UpdateTalentDto extends PartialType(CreateTalentDto) {}
 
 
 
+

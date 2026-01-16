@@ -118,6 +118,9 @@ JWT_EXPIRES_IN=7d
 # Telegram
 TELEGRAM_BOT_TOKEN=your-token
 TELEGRAM_WEBHOOK_SECRET=your-secret
+# Separate channels for jobs and talents
+TELEGRAM_CHANNEL_ID_JOBS=-1002985721031  # Jobs channel for posting job opportunities
+TELEGRAM_CHANNEL_ID_TALENTS=-1003451753461  # Talents channel for posting approved talent profiles
 
 # BullMQ
 BULLMQ_REDIS_URL=redis://localhost:6379

@@ -1,0 +1,37 @@
+{
+  "name": "@blihops/telegram-bot",
+  "version": "0.1.0",
+  "description": "Unified Telegram bot for BlihOps Talent Platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:integration": "bash tests/integration/verify-integration.sh"
+  },
+  "dependencies": {
+    "@blihops/shared": "workspace:*",
+    "@grammyjs/conversations": "^1.2.0",
+    "@grammyjs/menu": "^1.2.0",
+    "@grammyjs/ratelimiter": "^1.0.0",
+    "axios": "^1.6.7",
+    "dotenv": "^17.2.3",
+    "grammy": "^1.21.1",
+    "ioredis": "^5.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@vitest/coverage-v8": "^1.2.0",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  }
+}

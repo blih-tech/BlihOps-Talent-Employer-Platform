@@ -1,7 +1,9 @@
 import { Process, Processor } from '@nestjs/bull';
 import { Job } from 'bull';
 import { Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
+import { TelegramService } from '../../modules/telegram/telegram.service';
 import { QUEUE_NAMES } from '../queue.config';
 
 interface PublishTalentJobData {
@@ -11,8 +13,20 @@ interface PublishTalentJobData {
 @Processor(QUEUE_NAMES.PUBLISH_TALENT)
 export class PublishTalentProcessor {
   private readonly logger = new Logger(PublishTalentProcessor.name);
+  private readonly talentChannelId: string;
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private configService: ConfigService,
+    private telegramService: TelegramService,
+  ) {
+    // Get talents channel ID from environment
+    // Default: -1003451753461 (BlihOps Talents Channel)
+    this.talentChannelId = this.configService.get<string>(
+      'TELEGRAM_CHANNEL_ID_TALENTS',
+      '-1003451753461',
+    );
+  }
 
   @Process()
   async handlePublishTalent(job: Job<PublishTalentJobData>) {
@@ -33,10 +47,17 @@ export class PublishTalentProcessor {
       // Format message for Telegram
       const message = this.formatTalentMessage(talent);
 
-      // TODO: Send to Telegram channel via bot API
-      // This will be implemented when bot is ready
-      // For now, just log the message
-      this.logger.log(`Would publish to Telegram: ${message}`);
+      // Send to Telegram Talents Channel
+      // Channel ID: -1003451753461 (BlihOps Talents Channel)
+      const messageId = await this.telegramService.sendMessageToTalentsChannel(message);
+      
+      if (!messageId) {
+        throw new Error(`Failed to publish talent ${talentId} to Telegram channel`);
+      }
+
+      this.logger.log(
+        `Successfully published talent ${talentId} to Talents Channel (${this.talentChannelId}). Message ID: ${messageId}`,
+      );
 
       // Update job progress
       await job.progress(100);
@@ -44,8 +65,9 @@ export class PublishTalentProcessor {
       this.logger.log(`Successfully published talent ${talentId}`);
       return { success: true, talentId };
 
-    } catch (error) {
-      this.logger.error(`Failed to publish talent ${talentId}`, error.stack);
+    } catch (error: unknown) {
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Failed to publish talent ${talentId}`, errorStack);
       throw error; // Will trigger retry
     }
   }

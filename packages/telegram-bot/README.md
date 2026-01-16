@@ -49,25 +49,51 @@ cp .env.example .env
 
 ### Environment Variables
 
+Create a `.env` file in the `packages/telegram-bot` directory with the following variables:
+
 ```env
-# Telegram
-TELEGRAM_BOT_TOKEN=your-bot-token
-TELEGRAM_WEBHOOK_URL=https://your-domain.com/webhook
-TELEGRAM_WEBHOOK_SECRET=your-secret
+# Telegram Bot Configuration
+# Get your bot token from @BotFather on Telegram
+BOT_TOKEN=your-bot-token-here
 
-# Backend API
-API_BASE_URL=http://localhost:3000
-API_SECRET_KEY=your-api-secret
+# Backend API Configuration
+# URL of the backend API (without trailing slash)
+API_URL=http://localhost:3000/api/v1
 
-# Redis (for sessions)
-REDIS_URL=redis://localhost:6379
+# Redis Configuration
+# Redis host for session storage
+REDIS_HOST=localhost
+REDIS_PORT=6379
 
-# Admin Authorization
-ADMIN_TELEGRAM_IDS=123456789,987654321  # Comma-separated
+# Webhook Configuration (Production)
+# Set to 'true' to use webhooks instead of polling
+USE_WEBHOOKS=false
+# Secret for webhook verification
+WEBHOOK_SECRET=your-webhook-secret-here
 
-# Environment
-NODE_ENV=development
+# Telegram Channel Configuration
+# Separate channels for jobs and talents
+# Jobs channel: For publishing job postings (default: -1002985721031)
+TELEGRAM_CHANNEL_ID_JOBS=-1002985721031
+# Talents channel: For publishing approved talent profiles (default: -1003451753461)
+TELEGRAM_CHANNEL_ID_TALENTS=-1003451753461
+# Legacy support - maps to jobs channel if not set
+TELEGRAM_CHANNEL_ID=-1002985721031
+
+# Admin Configuration
+# Comma-separated list of Telegram user IDs that have admin access
+# To find your Telegram user ID, message @userinfobot on Telegram
+# Example: ADMIN_TELEGRAM_IDS=433629884
+# For multiple admins: ADMIN_TELEGRAM_IDS=433629884,987654321
+ADMIN_TELEGRAM_IDS=433629884
 ```
+
+**Finding Your Telegram User ID:**
+1. Open Telegram and search for `@userinfobot`
+2. Start a conversation with the bot
+3. It will reply with your user ID (a number like `123456789`)
+4. Add this ID to `ADMIN_TELEGRAM_IDS` in your `.env` file
+5. For multiple admins, separate IDs with commas: `ADMIN_TELEGRAM_IDS=123456789,987654321`
 
 ### Development
 
@@ -289,9 +315,12 @@ bot.start();
 - Review error logs
 
 ### Role-based access issues
-- Verify admin Telegram IDs in environment
+- Verify admin Telegram IDs in environment variable `ADMIN_TELEGRAM_IDS`
+- Make sure your Telegram user ID is in the comma-separated list
+- To find your user ID, message `@userinfobot` on Telegram
 - Check middleware is properly configured
 - Review session data in Redis
+- Ensure `ADMIN_TELEGRAM_IDS` is set before starting the bot (restart required after changes)
 
 ---
 

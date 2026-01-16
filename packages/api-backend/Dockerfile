@@ -7,15 +7,22 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
 
 # Copy workspace files
-COPY pnpm-workspace.yaml package.json ./
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml tsconfig.base.json ./
 COPY packages/eslint-config ./packages/eslint-config
 COPY packages/prettier-config ./packages/prettier-config
 COPY packages/core ./packages/core
 COPY packages/shared ./packages/shared
 COPY packages/api-backend ./packages/api-backend
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+# Install dependencies with increased network timeout
+RUN pnpm config set network-timeout 300000 && \
+    pnpm install --frozen-lockfile
+
+# Generate Prisma client before building
+WORKDIR /app/packages/api-backend
+RUN pnpm prisma generate
+
+WORKDIR /app
 
 # Build packages
 RUN pnpm --filter @blihops/core build
@@ -31,15 +38,17 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
 
 # Copy workspace files
-COPY pnpm-workspace.yaml package.json ./
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml tsconfig.base.json ./
 COPY packages/eslint-config ./packages/eslint-config
 COPY packages/prettier-config ./packages/prettier-config
 COPY packages/core ./packages/core
 COPY packages/shared ./packages/shared
 COPY packages/api-backend ./packages/api-backend
 
-# Install production dependencies only
-RUN pnpm install --frozen-lockfile --prod
+# Install production dependencies only with increased network timeout
+# Skip prepare scripts (husky) in production
+RUN pnpm config set network-timeout 300000 && \
+    pnpm install --frozen-lockfile --prod --ignore-scripts
 
 # Copy built files from builder
 COPY --from=builder /app/packages/core/dist ./packages/core/dist
